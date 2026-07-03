@@ -154,6 +154,8 @@ export default function Page() {
     function createNewChat() {
         setIsHydrating(true);
         setCurrentChat([]);
+        setUploadedFiles([]);
+        setPrompt('');
         setChatId('');
         setOpen(false);
     }
@@ -176,13 +178,24 @@ export default function Page() {
     async function sendPrompt() {
         try {
             setLoading(true);
+
+            const formData = new FormData();
+            formData.append('user_question', prompt);
+
+            if (uploadedFiles.length > 0) {
+                uploadedFiles.forEach((file, index) => {
+                    formData.append('files', file);
+                });
+            }
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/submit`, {
                 method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_question: prompt })
+                // credentials: 'include',
+                // headers: {
+                //     'Content-Type': 'application/json'
+                // },
+                // body: JSON.stringify({ user_question: prompt })
+                body: formData
             });
             if (!response.ok) {
                 throw new Error(`Error Status: ${response.status}`);
@@ -190,6 +203,7 @@ export default function Page() {
             const data = await response.json();
             setCurrentChat([...currentChat, { userPrompt: prompt, queryResponse: data.model_response }]);
             setPrompt("");
+            setUploadedFiles([]);
         } catch (err) {
             console.log(err);
         } finally {
