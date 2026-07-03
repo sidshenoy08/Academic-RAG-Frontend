@@ -9,7 +9,6 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
-import SendIcon from '@mui/icons-material/Send';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -24,7 +23,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
-import { TypeAnimation } from 'react-type-animation';
+import Markdown from 'markdown-to-jsx';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+import { Card, For, Grid } from "@chakra-ui/react";
+import { Icon } from "@chakra-ui/react";
+import { MdOutlineCancel } from "react-icons/md";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -47,6 +51,7 @@ export default function Page() {
     const [currentChat, setCurrentChat] = useState<Chat[]>([]);
     const [chatId, setChatId] = useState('');
     const [loading, setLoading] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
     const toggleDrawer = (newOpen: boolean) => () => {
         setOpen(newOpen);
@@ -157,37 +162,40 @@ export default function Page() {
         setPrompt(event.target.value);
     }
 
-    // async function sendPrompt() {
-    //     let finalPrompt = "";
+    function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+        if (event.target.files) {
+            const files = Array.from(event.target.files)
+            setUploadedFiles(prev => [...prev, ...files])
+        }
+    }
 
-    //     if (!prompt) {
-    //         finalPrompt = "Tell me a funny joke";
-    //     } else {
-    //         finalPrompt = prompt;
-    //     }
+    function removeFile(file: File) {
+        setUploadedFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+    }
 
-    //     try {
-    //         setLoading(true);
-    //         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
-    //             method: 'POST',
-    //             credentials: 'include',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({ userPrompt: finalPrompt })
-    //         });
-    //         if (!response.ok) {
-    //             throw new Error(`Error Status: ${response.status}`);
-    //         }
-    //         const data = await response.json();
-    //         setCurrentChat([...currentChat, { userPrompt: finalPrompt, queryResponse: data.response }]);
-    //         setPrompt("");
-    //     } catch (err) {
-    //         console.log(err);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }
+    async function sendPrompt() {
+        try {
+            setLoading(true);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/submit`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_question: prompt })
+            });
+            if (!response.ok) {
+                throw new Error(`Error Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setCurrentChat([...currentChat, { userPrompt: prompt, queryResponse: data.model_response }]);
+            setPrompt("");
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // async function clearChat() {
     //     try {
@@ -275,6 +283,24 @@ export default function Page() {
                             <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2 }}>
                                 Ask a question and get your answer right away! You can upload a research paper if you are looking for something specific.
                             </Typography>
+                            <Grid templateColumns="repeat(auto-fit, minmax(320px, 1fr))" justifyContent="center">
+                                <For each={uploadedFiles}>
+                                    {(uploadedFile, index) => (
+                                        <Card.Root width="320px" variant="elevated" key={index}>
+                                            <Card.Body gap="2">
+                                                <Card.Description>
+                                                    {uploadedFile.name}
+                                                </Card.Description>
+                                            </Card.Body>
+                                            <Card.Footer justifyContent="flex-end">
+                                                <Icon size="lg" onClick={() => removeFile(uploadedFile)}>
+                                                    <MdOutlineCancel />
+                                                </Icon>
+                                            </Card.Footer>
+                                        </Card.Root>
+                                    )}
+                                </For>
+                            </Grid>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                                 <IconButton
                                     component="label"
@@ -282,12 +308,14 @@ export default function Page() {
                                     tabIndex={-1}
                                     color="primary"
                                     aria-label="upload file"
+                                    disabled={loading}
                                 >
                                     <UploadFileOutlinedIcon color='secondary' />
                                     <VisuallyHiddenInput
                                         type="file"
-                                    // accept="image/*" // Optional: restrict to specific file types
-                                    // multiple // Optional: allow multiple files
+                                        accept="application/pdf" // restrict to pdf files
+                                        multiple // allow multiple files
+                                        onChange={handleFileUpload}
                                     />
                                 </IconButton>
                                 <TextField
@@ -302,7 +330,7 @@ export default function Page() {
                                         input: {
                                             endAdornment: (
                                                 <InputAdornment position="end">
-                                                    <IconButton aria-label="send" disabled={loading}>
+                                                    <IconButton aria-label="send" disabled={loading} onClick={sendPrompt}>
                                                         <SendOutlinedIcon color='info' />
                                                     </IconButton>
                                                 </InputAdornment>
@@ -363,13 +391,55 @@ export default function Page() {
                                                 maxWidth: '70%',
                                             }}
                                         >
-                                            {chat.queryResponse}
+                                            <Markdown>
+                                                {chat.queryResponse}
+                                            </Markdown>
                                         </Box>
+                                        <IconButton aria-label="like" disabled={loading} sx={{ alignSelf: 'flex-start', flexShrink: 0 }}>
+                                            <ThumbUpOutlinedIcon color='success' />
+                                        </IconButton>
+                                        <IconButton aria-label="dislike" disabled={loading} sx={{ alignSelf: 'flex-start' }}>
+                                            <ThumbDownOutlinedIcon color='error' />
+                                        </IconButton>
                                     </Box>
                                 </Box>
                             ))}
 
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                                <Grid templateColumns="repeat(auto-fit, minmax(320px, 1fr))" justifyContent="center">
+                                    <For each={uploadedFiles}>
+                                        {(uploadedFile, index) => (
+                                            <Card.Root width="320px" variant="elevated" key={index}>
+                                                <Card.Body gap="2">
+                                                    <Card.Description>
+                                                        {uploadedFile.name}
+                                                    </Card.Description>
+                                                </Card.Body>
+                                                <Card.Footer justifyContent="flex-end">
+                                                    <Icon size="lg" onClick={() => removeFile(uploadedFile)}>
+                                                        <MdOutlineCancel />
+                                                    </Icon>
+                                                </Card.Footer>
+                                            </Card.Root>
+                                        )}
+                                    </For>
+                                </Grid>
+                                <IconButton
+                                    component="label"
+                                    role={undefined}
+                                    tabIndex={-1}
+                                    color="primary"
+                                    aria-label="upload file"
+                                    disabled={loading}
+                                >
+                                    <UploadFileOutlinedIcon color='secondary' />
+                                    <VisuallyHiddenInput
+                                        type="file"
+                                        accept="application/pdf" // restrict to specific pdf files
+                                        multiple // allow multiple files
+                                        onChange={handleFileUpload}
+                                    />
+                                </IconButton>
                                 <TextField
                                     id="outlined-basic"
                                     label="Your prompt"
@@ -378,10 +448,18 @@ export default function Page() {
                                     sx={{ flexGrow: 1, borderRadius: "20px" }}
                                     value={prompt}
                                     onChange={handlePromptChange}
-                                    disabled={loading} />
-                                <IconButton aria-label="send" color='primary' disabled={loading}>
-                                    <SendIcon />
-                                </IconButton>
+                                    disabled={loading}
+                                    slotProps={{
+                                        input: {
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton aria-label="send" disabled={loading} onClick={sendPrompt}>
+                                                        <SendOutlinedIcon color='info' />
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            )
+                                        }
+                                    }} />
                                 <IconButton aria-label="clear" color='error' disabled={loading}>
                                     <DeleteIcon />
                                 </IconButton>
