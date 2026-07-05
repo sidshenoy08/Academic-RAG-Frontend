@@ -88,7 +88,7 @@ export default function Page() {
         bottom: 0,
         left: 0,
         whiteSpace: 'nowrap',
-        width: 1,
+        width: 1
     });
 
     // useEffect(() => {
@@ -458,7 +458,6 @@ export default function Page() {
                                     id="outlined-basic"
                                     label="Your prompt"
                                     variant="outlined"
-                                    // InputProps={{ sx: { borderRadius: "20px" } }}
                                     sx={{ flexGrow: 1, borderRadius: "20px" }}
                                     value={prompt}
                                     onChange={handlePromptChange}

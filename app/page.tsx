@@ -1,65 +1,335 @@
-import Image from "next/image";
+'use client'
+
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import AppBar from '@mui/material/AppBar';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import InputAdornment from '@mui/material/InputAdornment';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+
+import { useState, SyntheticEvent, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { IconButton } from '@mui/material';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`,
+  };
+}
 
 export default function Home() {
+  const router = useRouter();
+
+  const [value, setValue] = useState(0);
+
+  const initialNewUserState = {
+    email: '',
+    password: '',
+    cpassword: ''
+  };
+
+  const initialExistingUserState = {
+    email: '',
+    password: ''
+  };
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showCPassword, setShowCPassword] = useState(false);
+
+  const [newUserData, setNewUserData] = useState(initialNewUserState);
+  const [existingUserData, setExistingUserData] = useState(initialExistingUserState);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const logout = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error Status: ${response.status}`);
+        }
+        router.push("/");
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    logout();
+  }, []);
+
+  const handleChange = (event: SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
+
+  function togglePasswordVisibility() {
+    setShowPassword(!showPassword);
+  }
+
+  function toggleCPasswordVisibility() {
+    setShowCPassword(!showCPassword);
+  }
+
+  function handleNewUserDataChange(event: any) {
+    const { name, value } = event.target;
+    setNewUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+
+  function handleExistingUserDataChange(event: any) {
+    const { name, value } = event.target;
+    setExistingUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+
+  function handleClose() {
+    setErrorDialogOpen(false);
+  }
+
+  async function registerUser() {
+    if (!(newUserData.password === newUserData.cpassword)) {
+      setErrorDialogOpen(true);
+      setNewUserData(initialNewUserState);
+      return;
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newUserData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log(data);
+        throw new Error(`Error Status: ${response.status}`);
+      }
+      setNewUserData(initialNewUserState);
+      if (response.status === 201) {
+        try {
+          router.push("/home");
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  }
+
+  async function loginUser() {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(existingUserData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log(data);
+        throw new Error(`Error Status: ${response.status}`);
+      }
+      setExistingUserData(initialExistingUserState);
+      if (response.status === 200) {
+        try {
+          router.push("/home");
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', color: 'black' }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            QueryPi
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Box sx={{
+        minHeight: 'calc(100vh - 64px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        bgcolor: '#f5f5f5'
+      }}
+      >
+        <Box sx={{
+          width: 400,
+          bgcolor: 'white',
+          borderRadius: 3,
+          boxShadow: 3,
+          p: 3
+        }}
+        >
+          <Typography variant="h5">
+            Welcome to QueryPi
+          </Typography>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={value} onChange={handleChange} centered textColor='primary' indicatorColor='primary'>
+              <Tab label="Register" {...a11yProps(0)} />
+              <Tab label="Login" {...a11yProps(1)} />
+            </Tabs>
+          </Box>
+          <CustomTabPanel value={value} index={0}>
+            <Box
+              component="form"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                mt: 2
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <TextField fullWidth id="email" name="email" label="Email" value={newUserData.email} onChange={handleNewUserDataChange} variant="outlined" sx={{ borderRadius: "20px" }} />
+              <TextField fullWidth id="password" name="password" type={showPassword ? 'text' : 'password'} label="password" value={newUserData.password} onChange={handleNewUserDataChange} variant="outlined" sx={{ borderRadius: "20px" }} slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility}>
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }} />
+              <TextField fullWidth id="confirm-password" name="cpassword" type={showCPassword ? 'text' : 'password'} value={newUserData.cpassword} onChange={handleNewUserDataChange} label="Confirm Password" variant="outlined" sx={{ borderRadius: "20px" }} slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility}>
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }} />
+              <Button
+                variant="contained"
+                size="large"
+                sx={{
+                  mt: 1,
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
+                onClick={registerUser}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={1}>
+            <Box
+              component="form"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                mt: 2
+              }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+              <TextField fullWidth id="email" name="email" type='email' value={existingUserData.email} onChange={handleExistingUserDataChange} label="Email" variant="outlined" sx={{ borderRadius: "20px" }} />
+              <TextField fullWidth id="password" name="password" type={showPassword ? 'text' : 'password'} value={existingUserData.password} onChange={handleExistingUserDataChange} label="Password" variant="outlined" sx={{ borderRadius: "20px" }} slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end" onClick={togglePasswordVisibility}>
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </InputAdornment>
+                  ),
+                },
+              }} />
+              <Button
+                variant="contained"
+                size="large"
+                sx={{
+                  mt: 1,
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 600
+                }}
+                onClick={loginUser}
+              >
+                Login
+              </Button>
+            </Box>
+          </CustomTabPanel>
+          <Dialog
+            open={errorDialogOpen}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <DialogTitle id="alert-dialog-title">
+              {"Your passwords do not match!"}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                Please check your passwords. It looks like you have not entered the same passwords.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Got it!</Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+      </Box>
+    </>
   );
 }
