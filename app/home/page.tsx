@@ -29,6 +29,11 @@ import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import { Card, For, Grid } from "@chakra-ui/react";
 import { Icon } from "@chakra-ui/react";
 import { MdOutlineCancel } from "react-icons/md";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Stack from '@mui/material/Stack';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -52,6 +57,8 @@ export default function Page() {
     const [chatId, setChatId] = useState('');
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [chunkSize, setChunkSize] = useState(512);
+    const [chunkOverlap, setChunkOverlap] = useState(50);
 
     const toggleDrawer = (newOpen: boolean) => () => {
         setOpen(newOpen);
@@ -165,6 +172,14 @@ export default function Page() {
         setPrompt(event.target.value);
     }
 
+    function handleChunkSizeChange(event: SelectChangeEvent<Number>) {
+        setChunkSize(Number(event.target.value));
+    }
+
+    function handleChunkOverlapChange(event: SelectChangeEvent<Number>) {
+        setChunkOverlap(Number(event.target.value));
+    }
+
     function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
         if (event.target.files) {
             const files = Array.from(event.target.files)
@@ -182,6 +197,8 @@ export default function Page() {
 
             const formData = new FormData();
             formData.append('user_question', prompt);
+            formData.append('chunk_size', chunkSize);
+            formData.append('chunk_overlap', chunkOverlap);
 
             if (uploadedFiles.length > 0) {
                 uploadedFiles.forEach((file, index) => {
@@ -222,7 +239,7 @@ export default function Page() {
                 },
                 body: JSON.stringify({ chat: chatId })
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Error Status: ${response.status}`);
             }
@@ -288,6 +305,45 @@ export default function Page() {
                         </Button>
                     </Toolbar>
                 </AppBar>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mb: 5 }}>
+                <Stack direction="row" spacing={2} sx={{ width: '50%' }}>
+                    <FormControl size="small" fullWidth>
+                        <InputLabel id="select-chunk-size-label">Chunk Size</InputLabel>
+                        <Select
+                            labelId="select-chunk-size-label"
+                            id="select-chunk-size"
+                            value={chunkSize}
+                            label="Chunk Size"
+                            onChange={handleChunkSizeChange}
+                        >
+                            <MenuItem value={128}>128</MenuItem>
+                            <MenuItem value={256}>256</MenuItem>
+                            <MenuItem value={512}>512</MenuItem>
+                            <MenuItem value={1024}>1024</MenuItem>
+                            <MenuItem value={2048}>2048</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl size="small" fullWidth>
+                        <InputLabel id="select-chunk-overlap-label">Chunk Overlap</InputLabel>
+                        <Select
+                            labelId="select-chunk-overlap-label"
+                            id="select-chunk-overlap"
+                            value={chunkOverlap}
+                            label="Chunk Overlap"
+                            onChange={handleChunkOverlapChange}
+                        >
+                            <MenuItem value={15}>15</MenuItem>
+                            <MenuItem value={30}>30</MenuItem>
+                            <MenuItem value={50}>50</MenuItem>
+                            <MenuItem value={100}>100</MenuItem>
+                            <MenuItem value={200}>200</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Stack>
+                <Typography style={{ textAlign: 'center' }} variant="subtitle1">
+                    Select parameters to configure the model. Only works when you upload a paper!
+                </Typography>
             </Box>
 
             <Box>
