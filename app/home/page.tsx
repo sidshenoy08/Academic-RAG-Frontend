@@ -61,10 +61,11 @@ export default function Page() {
         <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
             <List>
                 {chatHistory.map((chat, index) => (
-                    <ListItem key={chat._id} onClick={() => {
+                    <ListItem key={chat.id} onClick={() => {
                         setIsHydrating(true);
                         setCurrentChat(chat.messages);
-                        setChatId(chat._id);
+                        setChatId(chat.id);
+
                     }}
                         disablePadding>
                         <ListItemButton>
@@ -91,30 +92,30 @@ export default function Page() {
         width: 1
     });
 
-    // useEffect(() => {
-    //     const retrieveChats = async () => {
-    //         try {
-    //             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/retrieve`, {
-    //                 method: 'GET',
-    //                 credentials: 'include',
-    //                 headers: {
-    //                     'Content-Type': 'application/json'
-    //                 }
-    //             });
+    useEffect(() => {
+        const retrieveChats = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/retrieve`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-    //             if (!response.ok) {
-    //                 throw new Error(`Error Status: ${response.status}`);
-    //             }
+                if (!response.ok) {
+                    throw new Error(`Error Status: ${response.status}`);
+                }
 
-    //             const data = await response.json();
-    //             setChatHistory(data.userChats);
-    //         } catch (err) {
-    //             console.log(err);
-    //         }
-    //     }
+                const data = await response.json();
+                setChatHistory(data.userChats);
+            } catch (err) {
+                console.log(err);
+            }
+        }
 
-    //     retrieveChats();
-    // }, []);
+        retrieveChats();
+    }, []);
 
     useEffect(() => {
         if (isHydrating) {
@@ -211,50 +212,50 @@ export default function Page() {
         }
     }
 
-    // async function clearChat() {
-    //     try {
-    //         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/delete`, {
-    //             method: 'POST',
-    //             credentials: 'include',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({ chat: chatId })
-    //         });
+    async function clearChat() {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/delete`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ chat: chatId })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error Status: ${response.status}`);
+            }
 
-    //         if (!response.ok) {
-    //             throw new Error(`Error Status: ${response.status}`);
-    //         }
+            setChatHistory(prev =>
+                prev.filter(chat => chat.id !== chatId)
+            );
 
-    //         setChatHistory(prev =>
-    //             prev.filter(chat => chat._id !== chatId)
-    //         );
+            setCurrentChat([]);
+            setChatId('');
+        } catch (err) {
+            console.log(err);
+        }
+    }
 
-    //         setCurrentChat([]);
-    //         setChatId('');
-    //     } catch (err) {
-    //         console.log(err);
-    //     }
-    // }
+    async function logout() {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-    // async function logout() {
-    //     try {
-    //         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
-    //             method: 'POST',
-    //             credentials: 'include',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             }
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error(`Error Status: ${response.status}`);
-    //         }
-    //         router.push("/");
-    //     } catch (err) {
-    //         console.log(err);
-    //     }
-    // }
+            if (!response.ok) {
+                throw new Error(`Error Status: ${response.status}`);
+            }
+            router.push("/");
+        } catch (err) {
+            console.log(err);
+        }
+    }
 
     return (
         <>
@@ -282,7 +283,9 @@ export default function Page() {
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             QueryPi
                         </Typography>
-                        <Button color="inherit">Logout</Button>
+                        <Button color="inherit" onClick={logout}>
+                            Logout
+                        </Button>
                     </Toolbar>
                 </AppBar>
             </Box>
@@ -473,7 +476,7 @@ export default function Page() {
                                             )
                                         }
                                     }} />
-                                <IconButton aria-label="clear" color='error' disabled={loading}>
+                                <IconButton aria-label="clear" color='error' disabled={loading} onClick={clearChat}>
                                     <DeleteIcon />
                                 </IconButton>
                             </Box>
