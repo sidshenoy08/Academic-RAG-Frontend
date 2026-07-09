@@ -340,6 +340,9 @@ export default function Page() {
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             QueryPi
                         </Typography>
+                        <Button color="inherit" onClick={() => router.push("/dashboard")}>
+                            Dashboard
+                        </Button>
                         <Button color="inherit" onClick={logout}>
                             Logout
                         </Button>
