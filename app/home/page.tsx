@@ -255,6 +255,46 @@ export default function Page() {
         }
     }
 
+    async function likeChat() {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/like`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ chat: chatId })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error Status: ${response.status}`);
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    async function dislikeChat() {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dislike`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ chat: chatId })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error Status: ${response.status}`);
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     async function logout() {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
@@ -468,10 +508,10 @@ export default function Page() {
                                                 {chat.queryResponse}
                                             </Markdown>
                                         </Box>
-                                        <IconButton aria-label="like" disabled={loading} sx={{ alignSelf: 'flex-start', flexShrink: 0 }}>
+                                        <IconButton aria-label="like" disabled={loading} sx={{ alignSelf: 'flex-start', flexShrink: 0 }} onClick={likeChat}>
                                             <ThumbUpOutlinedIcon color='success' />
                                         </IconButton>
-                                        <IconButton aria-label="dislike" disabled={loading} sx={{ alignSelf: 'flex-start' }}>
+                                        <IconButton aria-label="dislike" disabled={loading} sx={{ alignSelf: 'flex-start' }} onClick={dislikeChat}>
                                             <ThumbDownOutlinedIcon color='error' />
                                         </IconButton>
                                     </Box>
