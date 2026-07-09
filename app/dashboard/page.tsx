@@ -8,6 +8,8 @@ import Button from '@mui/material/Button'
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import MonthBarplot from './MonthBarplot';
+
 
 export default function Dashboard() {
     const [monthStats, setMonthStats] = useState([]);
@@ -77,6 +79,7 @@ export default function Dashboard() {
                     </Toolbar>
                 </AppBar>
             </Box>
+            <MonthBarplot data={monthStats} width={400} height={400} />
         </>
     )
 }
