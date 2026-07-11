@@ -54,7 +54,7 @@ const StackedBarplot = ({
     var colorScale = d3
         .scaleOrdinal<string>()
         .domain(allGroups)
-        .range(["#3f8f29", "#de1a24"]);
+        .range(["#de1a24", "#3f8f29"]);
 
     // Render the X and Y axis using d3.js, not react
     useEffect(() => {

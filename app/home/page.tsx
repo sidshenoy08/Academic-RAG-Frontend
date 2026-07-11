@@ -338,7 +338,7 @@ export default function Page() {
                             {DrawerList}
                         </Drawer>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            QueryPi
+                            ContextLens
                         </Typography>
                         <Button color="inherit" onClick={() => router.push("/dashboard")}>
                             Dashboard

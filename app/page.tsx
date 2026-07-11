@@ -198,7 +198,7 @@ export default function Home() {
       <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', color: 'black' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            QueryPi
+            ContextLens
           </Typography>
         </Toolbar>
       </AppBar>
