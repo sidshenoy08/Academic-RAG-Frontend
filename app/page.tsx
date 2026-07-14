@@ -238,7 +238,7 @@ export default function Home() {
               }}
             >
               <TextField fullWidth id="email" name="email" label="Email" value={newUserData.email} onChange={handleNewUserDataChange} variant="outlined" sx={{ borderRadius: "20px" }} />
-              <TextField fullWidth id="password" name="password" type={showPassword ? 'text' : 'password'} label="password" value={newUserData.password} onChange={handleNewUserDataChange} variant="outlined" sx={{ borderRadius: "20px" }} slotProps={{
+              <TextField fullWidth id="password" name="password" type={showPassword ? 'text' : 'password'} label="Password" value={newUserData.password} onChange={handleNewUserDataChange} variant="outlined" sx={{ borderRadius: "20px" }} slotProps={{
                 input: {
                   endAdornment: (
                     <InputAdornment position="end">
